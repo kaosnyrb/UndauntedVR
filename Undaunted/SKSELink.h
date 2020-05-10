@@ -7,7 +7,7 @@
 #include <skse64/GameData.h>
 #include <skse64/PluginAPI.h>
 #include <skse64/PapyrusCell.h>
-#include <skse64/GameForms.h>
+#include "skse64/GameForms.h"
 #include <skse64/PapyrusVM.h>
 #include <time.h>
 #include <skse64/GameRTTI.h>

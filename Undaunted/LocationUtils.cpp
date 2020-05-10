@@ -102,7 +102,6 @@ namespace Undaunted {
 		if (numberofRefs == 0)return NULL;
 		while (true)
 		{
-			//Random seems to stuck sometimes. Trying to prevent that.
 			int Nth = rand() % numberofRefs;
 			TESObjectREFR* ref = papyrusCell::GetNthRef(cell, Nth, 0);
 			if (ref != NULL)
@@ -145,7 +144,7 @@ namespace Undaunted {
 				{
 					if (test->worldSpace == NULL)
 					{
-						_MESSAGE("worldSpace %08X is null", i);
+						//_MESSAGE("worldSpace %08X is null", i);
 					}
 					else
 					{
@@ -179,14 +178,14 @@ namespace Undaunted {
 						}
 						else
 						{
-							_MESSAGE("unk088 is null for worldspace %08x", i);
+							//_MESSAGE("unk088 is null for worldspace %08x", i);
 						}
 					}
 
 				}
 				else
 				{
-					_MESSAGE("RegionList %08X is null", i);
+					//_MESSAGE("RegionList %08X is null", i);
 				}
 			}
 		}
@@ -207,7 +206,6 @@ namespace Undaunted {
 
 	WorldCell GetNamedWorldCell(BSFixedString WorldspaceName)
 	{
-		_MESSAGE("GetNamedWorldCell: %s", WorldspaceName.Get());
 		for (int i = 0; i < worldCellList.length; i++)
 		{
 			if (strcmp(worldCellList.data[i].world->editorId.Get(), WorldspaceName.c_str()) == 0)

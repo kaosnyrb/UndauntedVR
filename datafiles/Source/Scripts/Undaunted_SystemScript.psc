@@ -8,9 +8,11 @@ bool Function isSystemReady() global native
 
 bool Function InitSystem() global native
 
+Function PlayerTraveled(float distance) global native
+
 bool Function AddBadRegion(int regionid) global native
 
-int Function AddGroup(String questtext) global native
+int Function AddGroup(String questtext,String modRequirement, int minLevel, int maxLevel, int playerLevel) global native
 
 Function AddMembertoGroup(int groupid, int memberformid, string bountyType, string modelFilepath) global native
 
@@ -26,8 +28,10 @@ bool Function SetXMarker(objectReference markerref) global native
 
 float Function StartBounty(bool nearby) global native
 
-Function SpawnRandomReward(objectReference markerref,int playerlevel) global native
+Form Function SpawnRandomReward(int rewardOffset,int playerlevel) global native
 
 Function SetGroupMemberComplete(objectReference objref) global native
 
 ObjectReference[] Function GetBountyObjectRefs(string bountyType) global native
+
+Function SetScriptedDoorsComplete() global native

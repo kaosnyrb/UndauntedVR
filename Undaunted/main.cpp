@@ -32,7 +32,7 @@ extern "C"	{
 			return false;
 		}
 		/*
-		else if(skse->runtimeVersion != RUNTIME_VERSION_1_4_15)
+		else if(skse->runtimeVersion != RUNTIME_VERSION_1_5_97)
 		{
 			_MESSAGE("unsupported runtime version %08X", skse->runtimeVersion);
 
@@ -60,7 +60,6 @@ extern "C"	{
 			_MESSAGE("kMessage_PreLoadGame rechieved, clearing bounty data.");
 			Undaunted::BountyManager::getInstance()->ClearBountyData();
 		}
-
 		//Register to recieve interface from Enchantment Framework
 		//if (msg->type == SKSEMessagingInterface::kMessage_PostLoad)
 

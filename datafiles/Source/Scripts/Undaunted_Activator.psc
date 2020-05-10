@@ -7,6 +7,7 @@ objectReference Property markerref Auto
 {This will cause the bounties from this pillar to spawn in the named worldspace.It matches the values in the world section of the CK.}
 Message Property QuestTextMessage  Auto  
 GlobalVariable Property QuestStage  auto
+GlobalVariable Property TotalBounties  auto
 Spell Property startBountySpell Auto
 
 Key Property keyform Auto
@@ -16,7 +17,7 @@ int numberOfBountiesCurrently = 0
 
 Event OnInit()
 	;config values probably not loaded yet.
-	RegisterForUpdate(5.0)
+	;RegisterForUpdate(5.0)
 EndEvent
 
 
@@ -60,19 +61,24 @@ int Function StartEvent(bool nearby)
 				;Get the header row
 				int obj = JArray.getObj(data, 0)
 				string questtext = JArray.getStr(obj,0)		
-				int group = AddGroup(questtext)
-				int jcount = JArray.count(data)
-				int j = 1
-				while(j < jcount)
-					obj = JArray.getObj(data, j)
-					string sourcemod = JArray.getStr(obj,1)
-					int formid = JArray.getInt(obj,2)
-					string bountyType = JArray.getStr(obj,3)
-					string ModelFilepath = JArray.getStr(obj,4)
-					int modform = GetModForm(sourcemod, formid)
-					AddMembertoGroup(group,modform,bountyType,ModelFilepath)
-					j += 1
-				endWhile
+				string modreq = JArray.getStr(obj,1)
+				int minlevel = JArray.getInt(obj,2)
+				int maxlevel = JArray.getInt(obj,3)
+				int group = AddGroup(questtext,modreq,minlevel,maxlevel,Game.GetPlayer().GetLevel())
+				if group >= 0
+					int jcount = JArray.count(data)
+					int j = 1
+					while(j < jcount)
+						obj = JArray.getObj(data, j)
+						string sourcemod = JArray.getStr(obj,1)
+						int formid = JArray.getInt(obj,2)
+						string bountyType = JArray.getStr(obj,3)
+						string ModelFilepath = JArray.getStr(obj,4)
+						int modform = GetModForm(sourcemod, formid)
+						AddMembertoGroup(group,modform,bountyType,ModelFilepath)
+						j += 1
+					endWhile
+				endif
 			endWhile
 		endWhile
 		numberOfBountiesNeeded = GetConfigValueInt("NumberOfBountiesPerChain")
@@ -81,7 +87,7 @@ int Function StartEvent(bool nearby)
 	StartBounty(nearby)
 	questProperty.SetCurrentStageID(10)
 	QuestStage.SetValue(10)
-	RegisterForUpdate(GetConfigValueInt("BountyUpdateRate"))
+	RegisterForSingleUpdate(GetConfigValueInt("BountyUpdateRate"))
 endFunction
 
 int Function ClearBountyStatus()
@@ -89,9 +95,9 @@ int Function ClearBountyStatus()
 endFunction
 
 event onActivate(objectReference akActivator)
-	Game.GetPlayer().AddSpell(startBountySpell)
-	;ClearBountyStatus()
-	;StartEvent(false)
+	;Game.GetPlayer().AddSpell(startBountySpell)
+	ClearBountyStatus()
+	StartEvent(true)
 endEvent
 
 Function CleanUpBounty()
@@ -99,23 +105,37 @@ Function CleanUpBounty()
 	int allylength = allies.Length
 	while(allylength > 0)
 		allylength -= 1
-		allies[allylength].Disable(true)
+		allies[allylength].DisableNoWait(true)
 		allies[allylength].Delete()
 	endwhile
 	ObjectReference[] decorations = GetBountyObjectRefs("BountyDecoration")		
 	int decorationslength = decorations.Length
 	while(decorationslength > 0)
 	decorationslength -= 1
-		decorations[decorationslength].Disable(true)
+		decorations[decorationslength].DisableNoWait(true)
 		decorations[decorationslength].Delete()
+	endwhile
+	ObjectReference[] ScriptedDoors = GetBountyObjectRefs("ScriptedDoor")		
+	int ScriptedDoorslength = ScriptedDoors.Length
+	while(ScriptedDoorslength > 0)
+		ScriptedDoorslength -= 1
+		ScriptedDoors[ScriptedDoorslength].DisableNoWait(false)
+		ScriptedDoors[ScriptedDoorslength].Delete()
+	endwhile	
+	ObjectReference[] BossroomEnemy = GetBountyObjectRefs("BossroomEnemy")		
+	int BossroomEnemylength = BossroomEnemy.Length
+	while(BossroomEnemylength > 0)
+		BossroomEnemylength -= 1
+		BossroomEnemy[BossroomEnemylength].DisableNoWait(false)
+		BossroomEnemy[BossroomEnemylength].Delete()
 	endwhile
 endFunction
 
 Event OnUpdate()
-	if (QuestStage.GetValue() != 10)
-		UnregisterForUpdate()
-		return
-	EndIf
+	;if (QuestStage.GetValue() != 10)
+	;	UnregisterForUpdate()
+	;	return
+	;EndIf
 	;Debug.Notification("questProperty Stage: " + QuestStage.GetValue())
 	if (!isSystemReady())
 		;If we've got here something has gone wrong. Force a refresh.
@@ -124,6 +144,7 @@ Event OnUpdate()
 		return
 	EndIf
 	if (isSystemReady())
+		;Enemy check
 		ObjectReference[] enemies = GetBountyObjectRefs("Enemy")		
 		int enemieslength = enemies.Length
 		while(enemieslength > 0)
@@ -132,21 +153,35 @@ Event OnUpdate()
 				SetGroupMemberComplete(enemies[enemieslength])
 			endif
 		endwhile
+		;Bossroom enemy check
+		;ObjectReference[] BossroomEnemy = GetBountyObjectRefs("BossroomEnemy")		
+		;int BossroomEnemylength = BossroomEnemy.Length
+		;while(BossroomEnemylength > 0)
+		;BossroomEnemylength -= 1
+		;	if (BossroomEnemy[BossroomEnemylength] as Actor).IsDead()
+		;		SetGroupMemberComplete(BossroomEnemy[BossroomEnemylength])
+	;		endif
+	;	endwhile
 		bool complete = isBountyComplete()
 		;Debug.Notification("Bounty State: " + complete)
-		If complete
-			numberOfBountiesCurrently += 1
-			;UnregisterForUpdate()
-			CleanUpBounty()
-			if (numberOfBountiesCurrently < numberOfBountiesNeeded)
-				;questProperty.SetCurrentStageID(20)
-				StartEvent(true)
+		if (QuestStage.GetValue() == 10)
+			If complete
+				numberOfBountiesCurrently += 1
+				TotalBounties.SetValueInt(TotalBounties.GetValueInt() + 1)
+				;UnregisterForUpdate()
+				CleanUpBounty()
+				if (numberOfBountiesCurrently < numberOfBountiesNeeded)
+					;questProperty.SetCurrentStageID(20)
+					StartEvent(true)
+				Else
+					Game.GetPlayer().AddItem(keyform, 1, false)
+					questProperty.SetCurrentStageID(20)
+					QuestStage.SetValue(20)
+					;UnregisterForUpdate()
+				EndIf
 			Else
-				Game.GetPlayer().AddItem(keyform, 1, false)
-				questProperty.SetCurrentStageID(20)
-				QuestStage.SetValue(20)
-				UnregisterForUpdate()
-			EndIf
+				RegisterForSingleUpdate(GetConfigValueInt("BountyUpdateRate"))
+			endif
 		EndIf
 	EndIf
 EndEvent

@@ -19,11 +19,12 @@ namespace Undaunted {
 		WorldCell bountyworldcell;
 		int bountywave = 0;
 
+		UnStringList bountiesRan = UnStringList();
+
 		bool BountyUpdate();
 		float StartBounty(bool nearby);
 		void ClearBountyData();
-
-
+		void ResetBountiesRan();
 	};
 #endif
 }

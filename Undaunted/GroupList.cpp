@@ -36,28 +36,15 @@ namespace Undaunted
 
 	int GroupMember::IsComplete()
 	{
-		_MESSAGE("IsComplete Start");
 		const char* type = this->BountyType.Get();
-		_MESSAGE("BountyType %s", type);
-		if (strcmp(type, "Enemy") == 0)
-		{
-			if (this->objectRef != NULL)
-			{
-				return 1;
-				if (this->objectRef->IsDead(1))
-				{
-					return 1;
-				}
-			}
-		}
-		if (strcmp(type, "PhysicsScripted") == 0 || strcmp(type, "Scripted") == 0)
+		if (strcmp(type, "PhysicsScripted") == 0 || strcmp(type, "Scripted") == 0 || strcmp(type, "Enemy") == 0 || strcmp(type, "BossroomEnemy") == 0 || strcmp(type, "ScriptedDoor") == 0)
 		{
 			if (isComplete)
 			{
 				return 1;
 			}
 		}
-		if (strcmp(type, "BountyDecoration") == 0 || strcmp(type,"EndEffect") == 0 || strcmp(type, "SpawnEffect") == 0 || strcmp(type, "Ally") == 0)
+		if (strcmp(type, "BountyDecoration") == 0 || strcmp(type,"EndEffect") == 0 || strcmp(type, "SpawnEffect") == 0 || strcmp(type, "Ally") == 0 || strcmp(type, "BossroomEnemy") == 0 || strcmp(type, "Placer") == 0)
 		{
 			return 1;
 		}
@@ -71,7 +58,6 @@ namespace Undaunted
 
 	void GroupMember::PostBounty()
 	{
-		_MESSAGE("PostBounty");
 		const char* type = this->BountyType.Get();
 		if (strcmp(type, "EndEffect") == 0)
 		{
@@ -85,11 +71,5 @@ namespace Undaunted
 				PlaceAtMe_Native(BountyManager::getInstance()->_registry, 1, BountyManager::getInstance()->xmarkerref, spawnForm, 1, false, false);
 			}
 		}
-		/*
-		if (strcmp(type, "BountyDecoration") == 0)
-		{
-			MoveRefToWorldCell(this->objectRef, (*g_thePlayer)->parentCell, (*g_thePlayer)->currentWorldSpace,
-				NiPoint3(this->objectRef->pos.x, this->objectRef->pos.y, -20000), NiPoint3(0, 0, 0));
-		}*/
 	}
 }
