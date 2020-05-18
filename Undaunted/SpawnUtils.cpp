@@ -10,13 +10,13 @@ namespace Undaunted
 		TESForm* spawnForm = LookupFormByID(Type);
 		if (spawnForm == NULL)
 		{
-			_MESSAGE("Failed to Spawn. Form Invalid");
+			_MESSAGE("Failed to Spawn. Form Invalid: %08X", Type);
 			return NULL;
 		}
 		int spawnradius = GetConfigValueInt("BountyEnemyInteriorSpawnRadius");
 		NiPoint3 offset = NiPoint3(rand() & spawnradius, rand() & spawnradius, 0);
 		MoveRefToWorldCell(ref, cell, worldspace, ref->pos + offset, NiPoint3(0, 0, 0));
-		TESObjectREFR* spawned = PlaceAtMe_Native(registry, 1, ref, spawnForm, 1, false, false);
+		TESObjectREFR* spawned = PlaceAtMe(registry, 1, ref, spawnForm, 1, true, false);
 		MoveRefToWorldCell(ref, cell, worldspace, startingpoint, NiPoint3(0, 0, 0));
 		return spawned;
 	}
@@ -50,7 +50,7 @@ namespace Undaunted
 				//Random Offset
 				NiPoint3 offset = NiPoint3(rand() & spawnradius, rand() & spawnradius, 0);
 				MoveRefToWorldCell(Target, cell, worldspace, startingpoint + offset, NiPoint3(0, 0, 0));
-				spawned = PlaceAtMe_Native(registry, 1, Target, spawnForm, 1, false, false);
+				spawned = PlaceAtMe(registry, 1, Target, spawnForm, 1, true, false);
 				Types.data[i].objectRef = spawned;
 				Types.data[i].isComplete = false;
 			}
@@ -62,21 +62,23 @@ namespace Undaunted
 				if (spawned != NULL)
 				{
 					//Actors jump to the navmesh. Objects don't. This tries to used the jump to find the ground.
-					TESObjectREFR* decoration = PlaceAtMe_Native(registry, 1, spawned, spawnForm, 1, false, false);
+					TESObjectREFR* decoration = PlaceAtMe(registry, 1, spawned, spawnForm, 1, true, false);
 					Types.data[i].objectRef = decoration;
+					Types.data[i].isComplete = false;
 					Types.data[i].PreBounty();
 				}
 				else
 				{
-					TESObjectREFR* decoration = PlaceAtMe_Native(registry, 1, Target, spawnForm, 1, false, false);
+					TESObjectREFR* decoration = PlaceAtMe(registry, 1, Target, spawnForm, 1, true, false);
 					Types.data[i].objectRef = decoration;
+					Types.data[i].isComplete = false;
 					Types.data[i].PreBounty();
 				}
 			}
 			else if (strcmp(Types.data[i].BountyType.Get(), "PhysicsScripted") == 0)
 			{
 				//We don't want these falling through the floor, so we put them in the air.
-				TESObjectREFR* PhysicsScripted = PlaceAtMe_Native(registry, 1, spawned, spawnForm, 1, false, false);
+				TESObjectREFR* PhysicsScripted = PlaceAtMe(registry, 1, spawned, spawnForm, 1, true, false);
 				NiPoint3 offset = NiPoint3(0, 0, -1500);
 				//MoveRefToWorldCell(PhysicsScripted, cell, worldspace, PhysicsScripted->pos + offset, NiPoint3(0, 0, 0));
 				Types.data[i].objectRef = PhysicsScripted;

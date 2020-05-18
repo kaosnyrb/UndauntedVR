@@ -20,8 +20,10 @@ namespace Undaunted
 
 	class GroupList {
 	public:
-		const char* questText;
+		std::string questText;
 		GroupMember* data;
+		UInt32 minLevel;
+		UInt32 maxLevel;
 		int length;
 		GroupList* AddItem(GroupMember item);
 		void SetGroupMemberComplete(UInt32 id);

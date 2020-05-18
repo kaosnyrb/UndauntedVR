@@ -10,7 +10,7 @@ namespace Undaunted {
 
 	TESObjectREFR* GetRefObjectInCurrentCell(UInt32 formID)
 	{
-		TESObjectCELL* parentCell = (*g_thePlayer)->parentCell;
+		TESObjectCELL* parentCell = GetPlayer()->parentCell;
 		int numberofRefs = papyrusCell::GetNumRefs(parentCell, 0);
 		_MESSAGE("GetObjectInCurrentCell Num Ref: %i", numberofRefs);
 		for (int i = 0; i < numberofRefs; i++)
@@ -35,7 +35,7 @@ namespace Undaunted {
 	/*
 	TESObjectREFR* GetRefObjectFromWorld(UInt32 formID)
 	{
-		DataHandler* handler = DataHandler::GetSingleton();
+		DataHandler* handler = GetDataHandler();
 		_MESSAGE("RegionList Count: %08X", handler->regionList->Count());
 		UInt32 regioncount = handler->regionList->Count();
 		for (UInt32 i = 0; i < regioncount; i++)
@@ -95,16 +95,31 @@ namespace Undaunted {
 		return NULL;
 	}*/
 
-	TESObjectREFR* GetRandomObjectInCell(TESObjectCELL* cell)
+	TESObjectREFR* GetRandomObjectInCell(WorldCell worldcell)
 	{
-		int numberofRefs = papyrusCell::GetNumRefs(cell, 0);
-		_MESSAGE("GetRandomObjectInCell Num Ref: %i", numberofRefs);		
+		int numberofRefs = papyrusCell::GetNumRefs(worldcell.cell, 0);
+		auto safezones = GetSafezones();
+		//_MESSAGE("GetRandomObjectInCell Num Ref: %i", numberofRefs);		
 		if (numberofRefs == 0)return NULL;
 		while (true)
 		{
 			int Nth = rand() % numberofRefs;
-			TESObjectREFR* ref = papyrusCell::GetNthRef(cell, Nth, 0);
-			if (ref != NULL)
+			TESObjectREFR* ref = papyrusCell::GetNthRef(worldcell.cell, Nth, 0);
+			bool valid = true;
+			for (int i = 0; i < safezones.length; i++)
+			{
+				if (strcmp(safezones.data[i].Worldspace.c_str(), worldcell.world->editorId.Get()) == 0)
+				{
+					Vector3 distvector = Vector3(ref->pos.x - safezones.data[i].PosX, ref->pos.y - safezones.data[i].PosY, ref->pos.z - safezones.data[i].PosZ);
+					if (distvector.Magnitude() < safezones.data[i].Radius)
+					{
+						valid = false;
+						_MESSAGE("Target in Safezone: %s", safezones.data[i].Zonename.c_str());
+						break;
+					}
+				}
+			}
+			if (ref != NULL && valid)
 			{
 				return ref;
 			}
@@ -118,7 +133,7 @@ namespace Undaunted {
 		{
 			return;
 		}
-		DataHandler* handler = DataHandler::GetSingleton();
+		DataHandler* handler = GetDataHandler();
 		_MESSAGE("RegionList Count: %08X", handler->regionList->Count());
 
 		IntList badregions = GetBadRegions();
@@ -148,7 +163,10 @@ namespace Undaunted {
 					}
 					else
 					{
+						_MESSAGE("worldSpace %08X is not null", i);
 						_MESSAGE("processing worldSpace %p", test->worldSpace);
+						//Yeah. So some regions are really low in the memory stack?
+						//They blow up if you try and use them so we filter out worldspace pointers below 000000000002433E
 						if ((uintptr_t)test->worldSpace <= 148286)
 						{
 							_MESSAGE("Low Level Region, Ignoring.");
@@ -158,6 +176,7 @@ namespace Undaunted {
 							TESObjectCELL* cell = test->worldSpace->unk088;
 							if (cell != NULL)
 							{
+								_MESSAGE("unk088 is not null for worldspace %08x", i);
 								int numberofRefs = papyrusCell::GetNumRefs(cell, 0);
 								if (numberofRefs > 0)
 								{
@@ -187,11 +206,10 @@ namespace Undaunted {
 							}
 						}
 					}
-
 				}
 				else
 				{
-					//_MESSAGE("RegionList %08X is null", i);
+					_MESSAGE("RegionList %08X is null", i);
 				}
 			}
 		}
@@ -225,24 +243,48 @@ namespace Undaunted {
 	void MoveRefToWorldCell(TESObjectREFR* object, TESObjectCELL* cell, TESWorldSpace* worldspace, NiPoint3 pos, NiPoint3 rot)
 	{
 		_MESSAGE("Moving %08X to %08X in %s", object->formID, cell->formID, worldspace->editorId.Get());
-		UInt32 nullHandle = *g_invalidRefHandle;
 		NiPoint3 finalPos(pos);
-		//finalPos += object->pos;
+		MoveRef(object, cell, worldspace, finalPos,rot);
+	}
 
-		MoveRefrToPosition(object, &nullHandle, cell, worldspace, &finalPos, &rot);
+	//Expensive...
+	WorldCell GetWorldCellFromRef(TESObjectREFR* object)
+	{
+		NiPoint3 distance;
+		TESObjectREFR* ref;
+		int numberofRefs;
+		_MESSAGE("GetWorldCellFromRef Start");
+		for (int i = 0; i < worldCellList.length; i++)
+		{
+			numberofRefs = papyrusCell::GetNumRefs(worldCellList.data[i].cell, 0);
+			for (int j = 0; j < numberofRefs; j++)
+			{
+				ref = papyrusCell::GetNthRef(worldCellList.data[i].cell, j, 0);
+				if (ref != NULL)
+				{
+					distance = object->pos - ref->pos;
+					Vector3 distvector = Vector3(distance.x, distance.y, distance.z);
+					if (distvector.Magnitude() < 200)
+					{
+						return worldCellList.data[i];
+					}
+				}
+			}
+		}
+		return WorldCell();
 	}
 
 	//Interiors
 /*
 if (SpawnLocref == NULL)
 {
-	TESObjectCELL* here = (*g_thePlayer)->parentCell;
+	TESObjectCELL* here = GetPlayer()->parentCell;
 	_MESSAGE("Here form id %08X", here->formID);
-	_MESSAGE("Cell list Size %08X", DataHandler::GetSingleton()->cellList.m_size);
-	UInt32 cellcount = DataHandler::GetSingleton()->cellList.m_size;
+	_MESSAGE("Cell list Size %08X", GetDataHandler()->cellList.m_size);
+	UInt32 cellcount = GetDataHandler()->cellList.m_size;
 	for (int i = 0; i < cellcount; i++)
 	{
-		TESObjectCELL* parentCell = DataHandler::GetSingleton()->cellList.m_data[i];
+		TESObjectCELL* parentCell = GetDataHandler()->cellList.m_data[i];
 		_MESSAGE("Cell form id %08X", parentCell->formID);
 		_MESSAGE("Cell form id %08X", parentCell->formID);
 		int numberofRefs = papyrusCell::GetNumRefs(parentCell, 0);

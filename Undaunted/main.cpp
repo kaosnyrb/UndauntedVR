@@ -2,6 +2,8 @@
 #include <Undaunted\BountyManager.h>
 #include <Undaunted\ConfigUtils.h>
 #include <Undaunted\SKSELink.h>
+#include <Undaunted\StartupManager.h>
+
 
 static PluginHandle					g_pluginHandle = kPluginHandle_Invalid;
 static SKSEPapyrusInterface         * g_papyrus = NULL;
@@ -11,7 +13,7 @@ SKSEMessagingInterface* g_messageInterface = NULL;
 extern "C"	{
 
 	bool SKSEPlugin_Query(const SKSEInterface * skse, PluginInfo * info)	{	// Called by SKSE to learn about this plugin and check that it's safe to load it
-		gLog.OpenRelative(CSIDL_MYDOCUMENTS, "\\My Games\\Skyrim VR\\SKSE\\Undaunted.log");
+		gLog.OpenRelative(CSIDL_MYDOCUMENTS, "\\My Games\\Skyrim Special Edition\\SKSE\\Undaunted.log");
 		gLog.SetPrintLevel(IDebugLog::kLevel_Error);
 		gLog.SetLogLevel(IDebugLog::kLevel_DebugMessage);
 	
@@ -31,13 +33,17 @@ extern "C"	{
 
 			return false;
 		}
-		/*
-		else if(skse->runtimeVersion != RUNTIME_VERSION_1_5_97)
-		{
-			_MESSAGE("unsupported runtime version %08X", skse->runtimeVersion);
+		//else if(skse->runtimeVersion != RUNTIME_VERSION_1_5_97)
+		//{
+		//	_MESSAGE("unsupported runtime version %08X", skse->runtimeVersion);
 
-			return false;
-		}*/
+		//	return false;
+		//}
+		
+//		if (!Offsets::Initialize()) {
+	//		_ERROR("Failed to load game offset database. Visit https://www.nexusmods.com/skyrimspecialedition/mods/32444 to aquire the correct database file.");			
+		//	return false;
+	//	}
 
 		g_serialization = (SKSESerializationInterface*)skse->QueryInterface(kInterface_Serialization);
 		g_messageInterface = (SKSEMessagingInterface*)skse->QueryInterface(kInterface_Messaging);
@@ -58,7 +64,13 @@ extern "C"	{
 		{
 			//We're loading the game. Clear up any bounty data.
 			_MESSAGE("kMessage_PreLoadGame rechieved, clearing bounty data.");
-			Undaunted::BountyManager::getInstance()->ClearBountyData();
+			if (Undaunted::BountyManager::getInstance()->activebounties.length > 0)
+			{
+				for (int i = 0; i < Undaunted::BountyManager::getInstance()->activebounties.length; i++)
+				{
+					Undaunted::BountyManager::getInstance()->ClearBountyData(i);
+				}
+			}
 		}
 		//Register to recieve interface from Enchantment Framework
 		//if (msg->type == SKSEMessagingInterface::kMessage_PostLoad)
@@ -77,6 +89,10 @@ extern "C"	{
 
 		//Check if the function registration was a success...
 		bool btest = g_papyrus->Register(Undaunted::RegisterFuncs);
+		
+
+		Undaunted::GetDataHandler();
+		Undaunted::GetPlayer();
 
 		if (btest) {
 			_MESSAGE("Register Succeeded");

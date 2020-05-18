@@ -64,6 +64,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <ForcedIncludeFiles>common/IPrefix.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <ModuleDefinitionFile>exports.def</ModuleDefinitionFile>
@@ -96,10 +97,10 @@
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <AdditionalDependencies>skse.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BountyList.cpp" />
     <ClCompile Include="BountyManager.cpp" />
     <ClCompile Include="ConfigUtils.cpp" />
     <ClCompile Include="GroupList.cpp" />
@@ -109,30 +110,42 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MyPlugin.cpp" />
     <ClCompile Include="RewardUtils.cpp" />
+    <ClCompile Include="SafezoneList.cpp" />
+    <ClCompile Include="SKSELink.cpp" />
     <ClCompile Include="SpawnUtils.cpp" />
+    <ClCompile Include="StartupManager.cpp" />
     <ClCompile Include="UnStringList.cpp" />
     <ClCompile Include="WorldCellList.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="exports.def" />
+    <None Include="RSJparser.tcc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="addrlib\offsets.h" />
+    <ClInclude Include="addrlib\relocation.h" />
+    <ClInclude Include="addrlib\skse_macros.h" />
+    <ClInclude Include="addrlib\versiondb.h" />
+    <ClInclude Include="BountyList.h" />
     <ClInclude Include="BountyManager.h" />
     <ClInclude Include="ConfigUtils.h" />
+    <ClInclude Include="eternal.hpp" />
     <ClInclude Include="GroupList.h" />
     <ClInclude Include="IntList.h" />
     <ClInclude Include="ListLibary.h" />
     <ClInclude Include="LocationUtils.h" />
     <ClInclude Include="MyPlugin.h" />
     <ClInclude Include="RewardUtils.h" />
+    <ClInclude Include="SafezoneList.h" />
     <ClInclude Include="SKSELink.h" />
     <ClInclude Include="SpawnUtils.h" />
+    <ClInclude Include="StartupManager.h" />
     <ClInclude Include="UnStringList.h" />
     <ClInclude Include="WorldCellList.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\skse64\skse64.vcxproj">
-      <Project>{639411c0-fc23-4819-a0c5-429a4e5d8a51}</Project>
+      <Project>{7028b79c-06e3-4d9a-b38c-1dc3680b1bdb}</Project>
     </ProjectReference>
     <ProjectReference Include="..\skse64_common\skse64_common.vcxproj">
       <Project>{5fd1c08d-db80-480c-a1c6-f0920005cd13}</Project>

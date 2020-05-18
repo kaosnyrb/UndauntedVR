@@ -11,7 +11,8 @@ namespace Undaunted
 			GetConfigValueInt("RewardPotionWeight"),
 			GetConfigValueInt("RewardScrollWeight"),
 			GetConfigValueInt("RewardIngredientWeight"),
-			GetConfigValueInt("RewardBookWeight")
+			GetConfigValueInt("RewardBookWeight"),
+			GetConfigValueInt("RewardMiscWeight")
 		};
 		int numberofchoices = 6;
 		int sum_of_weight = 0;
@@ -26,10 +27,30 @@ namespace Undaunted
 		}
 	}
 
+	int loopcount = 0;
+	bool isFormInBlacklist(UInt32 formid)
+	{
+		auto blacklist = getRewardBlacklist();
+		DataHandler* dataHandler = GetDataHandler();
+		//for (int i = 0; i < blacklist.length; i++)
+	//	{
+//			auto mod = dataHandler->LookupModByName(blacklist.data[i].value.c_str());
+//			if (mod->IsFormInMod(formid))
+	//		{
+				//loopcount++;
+				//srand(time(NULL) + loopcount);
+		//		return true;
+			//}
+		//}
+		return false;
+	}
+
+	UInt32 LastReward = 0;
+
 	UInt32 GetReward(UInt32 rewardOffset, UInt32 playerlevel)
 	{
 		srand(time(NULL) + rewardOffset);
-		DataHandler* dataHandler = DataHandler::GetSingleton();
+		DataHandler* dataHandler = GetDataHandler();
 		std::set<TESObjectARMO*> exclude;
 		TESRace* race = NULL;
 		for (UInt32 i = 0; i < dataHandler->races.count; i++)
@@ -46,16 +67,27 @@ namespace Undaunted
 				exclude.insert(npc->skinForm.skin);
 		}
 
-		int type = GetRewardType();
 		bool found = false;
 		while (!found)
 		{
+			int type = 0;
+			bool foundvalidrewardtype = false;
+			while (!foundvalidrewardtype)
+			{
+				type = GetRewardType();
+				if (type == 6 && GetConfigValueInt("RewardAllowMiscItems") == 0)
+				{
+					continue;
+				}
+				foundvalidrewardtype = true;
+			}
 			TESObjectWEAP* weapon = NULL;
 			TESObjectARMO* armour = NULL;
 			AlchemyItem* potion = NULL;
 			ScrollItem* scroll = NULL;
 			IngredientItem* ingre = NULL;
 			TESObjectBOOK* book = NULL;
+			TESObjectMISC* misc = NULL;
 			//type = 3;
 			switch (type)
 			{
@@ -66,6 +98,9 @@ namespace Undaunted
 				if (armour->templateArmor) continue;
 				if (armour->value.value <= 10) continue;
 				if (!IsArmourLevelOk(armour, playerlevel))continue;
+				if (armour->formID == LastReward) continue;
+				if (isFormInBlacklist(armour->formID)) continue;
+				LastReward = armour->formID;
 				return armour->formID;
 			case 1:
 				dataHandler->weapons.GetNthItem(rand() % dataHandler->weapons.count, weapon);
@@ -74,21 +109,33 @@ namespace Undaunted
 				if (weapon->value.value == 0) continue;
 				if (weapon->templateForm) continue;
 				if (!IsWeaponLevelOk(weapon, playerlevel)) continue;
+				if (weapon->formID == LastReward) continue;
+				if (isFormInBlacklist(weapon->formID)) continue;
+				LastReward = weapon->formID;
 				return weapon->formID;
 			case 2:
 				dataHandler->potions.GetNthItem(rand() % dataHandler->potions.count, potion);
+				if (potion->formID == LastReward) continue;
+				if (isFormInBlacklist(potion->formID)) continue;
+				LastReward = potion->formID;
 				return potion->formID;
 			case 3:
 				dataHandler->scrolls.GetNthItem(rand() % dataHandler->scrolls.count, scroll);
 				if (!scroll->IsPlayable()) continue;
 				if (!scroll->Has3D()) continue;
 				if (scroll->value.value == 0) continue;
+				if (scroll->formID == LastReward) continue;
+				if (isFormInBlacklist(scroll->formID)) continue;
+				LastReward = scroll->formID;
 				return scroll->formID;
 			case 4:
 				dataHandler->ingredients.GetNthItem(rand() % dataHandler->ingredients.count, ingre);
 				if (!ingre->IsPlayable()) continue;
 				if (!ingre->Has3D()) continue;
 				if (ingre->value.value == 0) continue;
+				if (ingre->formID == LastReward) continue;
+				if (isFormInBlacklist(ingre->formID)) continue;
+				LastReward = ingre->formID;
 				return ingre->formID;
 			case 5:
 				dataHandler->books.GetNthItem(rand() % dataHandler->books.count, book);
@@ -97,7 +144,20 @@ namespace Undaunted
 				if (book->value.value == 0) continue;
 				if (book->value.value <= 50) continue;
 				if (book->value.value >= 2000) continue;
+				if (book->formID == LastReward) continue;
+				if (isFormInBlacklist(book->formID)) continue;
+				LastReward = book->formID;
 				return book->formID;
+			case 6:
+				dataHandler->miscObjects.GetNthItem(rand() % dataHandler->miscObjects.count, misc);
+				if (!misc->IsPlayable()) continue;
+				if (!misc->Has3D()) continue;
+				if (misc->value.value == 0) continue;
+				if (misc->value.value <= 50) continue;
+				if (misc->formID == LastReward) continue;
+				if (isFormInBlacklist(misc->formID)) continue;
+				LastReward = misc->formID;
+				return misc->formID;
 			default:
 				dataHandler->weapons.GetNthItem(rand() % dataHandler->weapons.count, weapon);
 				if (!weapon->IsPlayable()) continue;
@@ -105,6 +165,9 @@ namespace Undaunted
 				if (weapon->value.value == 0) continue;
 				if (weapon->templateForm) continue;
 				if (!IsWeaponLevelOk(weapon, playerlevel)) continue;
+				if (weapon->formID == LastReward) continue;
+				if (isFormInBlacklist(weapon->formID)) continue;
+				LastReward = weapon->formID;
 				return weapon->formID;
 			}
 		}

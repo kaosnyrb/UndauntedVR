@@ -31,6 +31,16 @@
       <Filter>Utils</Filter>
     </ClCompile>
     <ClCompile Include="BountyManager.cpp" />
+    <ClCompile Include="BountyList.cpp">
+      <Filter>Collections</Filter>
+    </ClCompile>
+    <ClCompile Include="SKSELink.cpp" />
+    <ClCompile Include="StartupManager.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="SafezoneList.cpp">
+      <Filter>Collections</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MyPlugin.h" />
@@ -63,9 +73,36 @@
     </ClInclude>
     <ClInclude Include="BountyManager.h" />
     <ClInclude Include="SKSELink.h" />
+    <ClInclude Include="BountyList.h">
+      <Filter>Collections</Filter>
+    </ClInclude>
+    <ClInclude Include="addrlib\offsets.h">
+      <Filter>addresslib</Filter>
+    </ClInclude>
+    <ClInclude Include="addrlib\relocation.h">
+      <Filter>addresslib</Filter>
+    </ClInclude>
+    <ClInclude Include="addrlib\skse_macros.h">
+      <Filter>addresslib</Filter>
+    </ClInclude>
+    <ClInclude Include="addrlib\versiondb.h">
+      <Filter>addresslib</Filter>
+    </ClInclude>
+    <ClInclude Include="eternal.hpp">
+      <Filter>addresslib</Filter>
+    </ClInclude>
+    <ClInclude Include="StartupManager.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="SafezoneList.h">
+      <Filter>Collections</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="exports.def" />
+    <None Include="RSJparser.tcc">
+      <Filter>Utils</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Collections">
@@ -73,6 +110,9 @@
     </Filter>
     <Filter Include="Utils">
       <UniqueIdentifier>{a80de454-0a01-4768-89be-c774625d7248}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="addresslib">
+      <UniqueIdentifier>{c5b3a7d2-ed50-4b84-af74-457a7bc5f9f0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

@@ -25,11 +25,14 @@ namespace Undaunted
 	{
 		for (int i = 0; i < this->length; i++)
 		{
-			if ( id == this->data[i].objectRef->formID)
+			if (this->data[i].objectRef != NULL)
 			{
-				this->data[i].isComplete = true;
-				_MESSAGE("SetGroupMemberComplete: %08X ", id);
-				return;
+				if (id == this->data[i].objectRef->formID)
+				{
+					this->data[i].isComplete = true;
+					_MESSAGE("SetGroupMemberComplete: %08X ", id);
+					return;
+				}
 			}
 		}
 	}
@@ -43,12 +46,18 @@ namespace Undaunted
 			{
 				return 1;
 			}
+			else
+			{
+				return 0;
+			}
 		}
 		if (strcmp(type, "BountyDecoration") == 0 || strcmp(type,"EndEffect") == 0 || strcmp(type, "SpawnEffect") == 0 || strcmp(type, "Ally") == 0 || strcmp(type, "BossroomEnemy") == 0 || strcmp(type, "Placer") == 0)
 		{
 			return 1;
 		}
-		return 0;
+		//In case I don't know what's happenening just mark it as done.
+		//Doing so due to an error from wyongcan2019 where the Ally type became lowercase for some reason.
+		return 1;
 	}
 
 	void GroupMember::PreBounty()
@@ -68,7 +77,7 @@ namespace Undaunted
 			}
 			else
 			{
-				PlaceAtMe_Native(BountyManager::getInstance()->_registry, 1, BountyManager::getInstance()->xmarkerref, spawnForm, 1, false, false);
+//				PlaceAtMe_Native(BountyManager::getInstance()->_registry, 1, BountyManager::getInstance()->xmarkerref, spawnForm, 1, false, false);
 			}
 		}
 	}
