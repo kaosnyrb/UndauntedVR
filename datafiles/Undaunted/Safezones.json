@@ -1,0 +1,154 @@
+[
+    {
+        "Zonename": "Undaunted Camp",
+        "Worldspace": "Tamriel",
+        "PosX": 97134,
+        "PosY": 38965,
+        "PosZ": -8432,
+        "Radius": 8000
+    },
+    {
+        "Zonename": "Whiterun",
+        "Worldspace": "Tamriel",
+        "PosX": 24830,
+        "PosY": -4079,
+        "PosZ": -3017,
+        "Radius": 15000
+    },
+    {
+        "Zonename": "Riverwood",
+        "Worldspace": "Tamriel",
+        "PosX": 21736,
+        "PosY": -45248,
+        "PosZ": -144,
+        "Radius": 7500
+    },
+    {
+        "Zonename": "Falkreath",
+        "Worldspace": "Tamriel",
+        "PosX": -30896,
+        "PosY": -87765,
+        "PosZ": -3129,
+        "Radius": 7500
+    },
+    {
+        "Zonename": "Markath",
+        "Worldspace": "Tamriel",
+        "PosX": -172930,
+        "PosY": 5529,
+        "PosZ": -3349,
+        "Radius": 15000
+    },
+    {
+        "Zonename": "Riften",
+        "Worldspace": "Tamriel",
+        "PosX": 174314,
+        "PosY": -91958,
+        "PosZ": 11128,
+        "Radius": 10000
+    },
+    {
+        "Zonename": "Riften Goldenglow Estate",
+        "Worldspace": "Tamriel",
+        "PosX": 154979,
+        "PosY": -97139,
+        "PosZ": 11055,
+        "Radius": 6000
+    },
+    {
+        "Zonename": "Windhelm",
+        "Worldspace": "Tamriel",
+        "PosX": 135007,
+        "PosY": 34534,
+        "PosZ": -12441,
+        "Radius": 10000
+    },
+    {
+        "Zonename": "Winterhold",
+        "Worldspace": "Tamriel",
+        "PosX": 109254,
+        "PosY": 102420,
+        "PosZ": -9030,
+        "Radius": 8000
+    },
+    {
+        "Zonename": "Winterhold College",
+        "Worldspace": "Tamriel",
+        "PosX": 116378,
+        "PosY": 111640,
+        "PosZ": -7713,
+        "Radius": 8000
+    },
+    {
+        "Zonename": "Dawnstar",
+        "Worldspace": "Tamriel",
+        "PosX": 31037,
+        "PosY": 103676,
+        "PosZ": -13803,
+        "Radius": 8000
+    },
+    {
+        "Zonename": "Solitude",
+        "Worldspace": "Tamriel",
+        "PosX": -59264,
+        "PosY": 106735,
+        "PosZ": -8227,
+        "Radius": 12000
+    },
+    {
+        "Zonename": "Morthal",
+        "Worldspace": "Tamriel",
+        "PosX": -37412,
+        "PosY": 64447,
+        "PosZ": -13993,
+        "Radius": 8000
+    },
+    {
+        "Zonename": "Sky Haven",
+        "Worldspace": "Tamriel",
+        "PosX": -141439,
+        "PosY": 6698,
+        "PosZ": -3967,
+        "Radius": 5000
+    },
+    {
+        "Zonename": "Dragon Bridge",
+        "Worldspace": "Tamriel",
+        "PosX": -101776,
+        "PosY": 83684,
+        "PosZ": -12078,
+        "Radius": 5000
+    },
+    {
+        "Zonename": "Ivarstead",
+        "Worldspace": "Tamriel",
+        "PosX": 76764,
+        "PosY": -64970,
+        "PosZ": 10850,
+        "Radius": 5000
+    },
+    {
+        "Zonename": "Karthwasten",
+        "Worldspace": "Tamriel",
+        "PosX": -132985,
+        "PosY": 38716,
+        "PosZ": -6170,
+        "Radius": 5000
+    },
+    {
+        "Zonename": "Rorikstead",
+        "Worldspace": "Tamriel",
+        "PosX": -84873,
+        "PosY": 7620,
+        "PosZ": -4101,
+        "Radius": 5000
+    },
+    {
+        "Zonename": "Shor's Stone",
+        "Worldspace": "Tamriel",
+        "PosX": 163471,
+        "PosY": -60504,
+        "PosZ": 7074,
+        "Radius": 5000
+    }
+]
