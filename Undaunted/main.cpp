@@ -13,7 +13,7 @@ SKSEMessagingInterface* g_messageInterface = NULL;
 extern "C"	{
 
 	bool SKSEPlugin_Query(const SKSEInterface * skse, PluginInfo * info)	{	// Called by SKSE to learn about this plugin and check that it's safe to load it
-		gLog.OpenRelative(CSIDL_MYDOCUMENTS, "\\My Games\\Skyrim Special Edition\\SKSE\\Undaunted.log");
+		gLog.OpenRelative(CSIDL_MYDOCUMENTS, "\\My Games\\SkyrimVR\\SKSE\\Undaunted.log");
 		gLog.SetPrintLevel(IDebugLog::kLevel_Error);
 		gLog.SetLogLevel(IDebugLog::kLevel_DebugMessage);
 	
