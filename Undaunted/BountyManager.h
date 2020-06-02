@@ -2,6 +2,7 @@
 #include "SpawnUtils.h"
 #include "ConfigUtils.h"
 #include "BountyList.h"
+#include "RefList.h"
 
 namespace Undaunted {
 #ifndef BountyManagerdef
@@ -15,13 +16,19 @@ namespace Undaunted {
 		int isReady = 0;
 
 		BountyList activebounties = BountyList();
-		UnStringList bountiesRan = UnStringList();
+		UnDictionary bountiesRan = UnDictionary();
+		RefList deleteList = RefList();
 
 		bool BountyUpdate(int BountyID);
-		float StartBounty(int BountyID, bool nearby, const char* BountyName, TESObjectREFR* ref, BSFixedString WorldSpaceName);
+		float StartBounty(int BountyID, bool nearby, const char* BountyName, TESObjectREFR* ref, BSFixedString WorldSpaceName, std::string bountyTag = "");
 		float restartBounty(int BountyID, const char* BountyName);
 		void ClearBountyData(int BountyID);
 		void ResetBountiesRan();
+		void AddToDeleteList(TESObjectREFR* ref);
+		void ClearDeleteList();
+
+		RefList StartRift(int BountyID, TESObjectREFR* Startpoint);
+
 	};
 #endif
 }

@@ -14,7 +14,7 @@ namespace Undaunted
 			GetConfigValueInt("RewardBookWeight"),
 			GetConfigValueInt("RewardMiscWeight")
 		};
-		int numberofchoices = 6;
+		int numberofchoices = 7;
 		int sum_of_weight = 0;
 		for (int i = 0; i < numberofchoices; i++) {
 			sum_of_weight += choice_weight[i];
@@ -32,16 +32,6 @@ namespace Undaunted
 	{
 		auto blacklist = getRewardBlacklist();
 		DataHandler* dataHandler = GetDataHandler();
-		//for (int i = 0; i < blacklist.length; i++)
-	//	{
-//			auto mod = dataHandler->LookupModByName(blacklist.data[i].value.c_str());
-//			if (mod->IsFormInMod(formid))
-	//		{
-				//loopcount++;
-				//srand(time(NULL) + loopcount);
-		//		return true;
-			//}
-		//}
 		return false;
 	}
 
@@ -220,7 +210,7 @@ namespace Undaunted
 		int maxArmourForPart = 0;
 		for (int i = 0; i < armour->keyword.numKeywords; i++)
 		{
-			if (_stricmp(armour->keyword.keywords[i]->keyword.data, "DaedricArtifact") == 0 && GetConfigValueInt("RewardAllowDaedricArtifacts") == 1)return false;
+			if (_stricmp(armour->keyword.keywords[i]->keyword.data, "DaedricArtifact") == 0 && GetConfigValueInt("RewardAllowDaedricArtifacts") == 0)return false;
 			if (_stricmp(armour->keyword.keywords[i]->keyword.data, "ArmorShield") == 0 && GetConfigValueInt("RewardAllowShields") == 0)return false;
 			if (_stricmp(armour->keyword.keywords[i]->keyword.data, "Dummy") == 0) return false;
 		}

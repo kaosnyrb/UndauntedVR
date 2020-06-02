@@ -73,7 +73,7 @@
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>COPY $(TargetPath) "C:\Program Files (x86)\Steam\steamapps\common\SkyrimVR\Data\SKSE\Plugins\$(TargetFileName)"</Command>
+      <Command>COPY $(TargetPath) "C:\Program Files (x86)\Steam\steamapps\common\Skyrim Special Edition\Data\SKSE\Plugins\$(TargetFileName)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -98,18 +98,25 @@
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
+    <PostBuildEvent>
+      <Command>COPY $(TargetPath) "C:\Program Files (x86)\Steam\steamapps\common\Skyrim Special Edition\Data\SKSE\Plugins\$(TargetFileName)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BountyList.cpp" />
     <ClCompile Include="BountyManager.cpp" />
     <ClCompile Include="ConfigUtils.cpp" />
+    <ClCompile Include="FormRefList.cpp" />
     <ClCompile Include="GroupList.cpp" />
     <ClCompile Include="IntList.cpp" />
     <ClCompile Include="ListLibary.cpp" />
     <ClCompile Include="LocationUtils.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MyPlugin.cpp" />
+    <ClCompile Include="NavMeshTool.cpp" />
+    <ClCompile Include="RefList.cpp" />
     <ClCompile Include="RewardUtils.cpp" />
+    <ClCompile Include="RiftList.cpp" />
     <ClCompile Include="SafezoneList.cpp" />
     <ClCompile Include="SKSELink.cpp" />
     <ClCompile Include="SpawnUtils.cpp" />
@@ -130,12 +137,16 @@
     <ClInclude Include="BountyManager.h" />
     <ClInclude Include="ConfigUtils.h" />
     <ClInclude Include="eternal.hpp" />
+    <ClInclude Include="FormRefList.h" />
     <ClInclude Include="GroupList.h" />
     <ClInclude Include="IntList.h" />
     <ClInclude Include="ListLibary.h" />
     <ClInclude Include="LocationUtils.h" />
     <ClInclude Include="MyPlugin.h" />
+    <ClInclude Include="NavmeshTool.h" />
+    <ClInclude Include="RefList.h" />
     <ClInclude Include="RewardUtils.h" />
+    <ClInclude Include="RiftList.h" />
     <ClInclude Include="SafezoneList.h" />
     <ClInclude Include="SKSELink.h" />
     <ClInclude Include="SpawnUtils.h" />

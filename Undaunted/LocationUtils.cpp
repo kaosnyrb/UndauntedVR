@@ -1,6 +1,9 @@
 #include "LocationUtils.h"
 #include <Undaunted\ConfigUtils.h>
 #include "WorldCellList.h"
+#include "FormRefList.h"
+#include <Undaunted\RiftList.h>
+#include <Undaunted\RefList.h>
 
 namespace Undaunted {
 	WorldCellList worldCellList;
@@ -242,9 +245,12 @@ namespace Undaunted {
 
 	void MoveRefToWorldCell(TESObjectREFR* object, TESObjectCELL* cell, TESWorldSpace* worldspace, NiPoint3 pos, NiPoint3 rot)
 	{
-		_MESSAGE("Moving %08X to %08X in %s", object->formID, cell->formID, worldspace->editorId.Get());
-		NiPoint3 finalPos(pos);
-		MoveRef(object, cell, worldspace, finalPos,rot);
+		if (object != NULL)
+		{
+			_MESSAGE("Moving %08X to %08X in %s", object->formID, cell->formID, worldspace->editorId.Get());
+			NiPoint3 finalPos(pos);
+			MoveRef(object, cell, worldspace, finalPos, rot);
+		}
 	}
 
 	//Expensive...
@@ -253,7 +259,6 @@ namespace Undaunted {
 		NiPoint3 distance;
 		TESObjectREFR* ref;
 		int numberofRefs;
-		_MESSAGE("GetWorldCellFromRef Start");
 		for (int i = 0; i < worldCellList.length; i++)
 		{
 			numberofRefs = papyrusCell::GetNumRefs(worldCellList.data[i].cell, 0);
@@ -272,6 +277,156 @@ namespace Undaunted {
 			}
 		}
 		return WorldCell();
+	}
+
+	void CaptureArea()
+	{
+		gLog.OpenRelative(CSIDL_MYDOCUMENTS, "\\My Games\\Skyrim Special Edition\\SKSE\\UndauntedRift.pas");
+		FormRefList list = FormRefList();
+		TESObjectCELL* parentCell = GetPlayer()->parentCell;
+		int numberofRefs = papyrusCell::GetNumRefs(parentCell, 0);
+		//Right so instead of faffing about creating a sse edit script that can read in files we'll just generate an sse script.
+		_MESSAGE("unit userscript;uses SkyrimUtils;uses mteFunctions;");
+		_MESSAGE("function Process(e: IInterface): integer;");
+		_MESSAGE("var cell: IInterface; ref: IInterface;");
+		_MESSAGE("begin Result := 0; if not (Signature(e) = 'CELL') then begin Exit; end; cell := createRecord(GetFile(e), 'CELL');");
+		_MESSAGE("SetElementEditValues(cell, 'EDID', '%s');","Cell Name");
+		_MESSAGE("SetElementEditValues(cell, 'LTMP', '%s');", "0006AB01");//Lighting template
+		for (int i = 0; i < numberofRefs; i++)
+		{
+			TESObjectREFR* ref = papyrusCell::GetNthRef(parentCell, i, 0);
+			if (ref != NULL)
+			{
+				if (ref->formID != NULL)
+				{
+					FormRef saveref = FormRef();
+					saveref.formId = ref->baseForm->formID;
+					saveref.pos = ref->pos - GetPlayer()->pos;
+					saveref.rot = ref->rot;
+					saveref.scale = ref->unk90;
+					saveref.type = static_cast<FormType>(ref->baseForm->formType);
+					if ((saveref.type == kFormType_Static
+						//|| saveref.type == kFormType_LeveledCharacter
+						|| saveref.type == kFormType_Activator
+						|| saveref.type == kFormType_Sound
+						|| saveref.type == kFormType_Light
+						|| saveref.type == kFormType_Container
+						|| saveref.type == kFormType_MovableStatic
+						|| saveref.type == kFormType_Furniture
+						|| saveref.type == kFormType_Reference
+						|| saveref.type == kFormType_LeveledItem
+						//|| saveref.type == kFormType_NPC
+						|| saveref.type == kFormType_Hazard
+						|| saveref.type == kFormType_Door
+						|| saveref.type == kFormType_Flora
+						|| saveref.type == kFormType_Tree
+						|| saveref.type == kFormType_Grass
+						|| saveref.type == kFormType_NAVM
+						|| saveref.type == kFormType_NAVI) 
+						&& saveref.formId < 4278190000)
+					{
+						_MESSAGE("ref: = Add(cell, 'REFR', true);");
+						_MESSAGE("SetElementEditValues(ref, 'EDID', GetElementEditValues(getRecordByFormID('%08X'), 'EDID'));", saveref.formId);
+						_MESSAGE("SetElementEditValues(ref, 'NAME', '%08X');", saveref.formId);
+						_MESSAGE("SetElementEditValues(ref, 'XSCL', '%f');", ((float)saveref.scale)/100);
+						_MESSAGE("seev(ref, 'DATA\\[0]\\[0]', %f);", saveref.pos.x);
+						_MESSAGE("seev(ref, 'DATA\\[0]\\[1]', %f);", saveref.pos.y);
+						_MESSAGE("seev(ref, 'DATA\\[0]\\[2]', %f);", saveref.pos.z);
+						_MESSAGE("seev(ref, 'DATA\\[1]\\[0]', %f);", saveref.rot.x * (180.0 / 3.141592653589793238463));
+						_MESSAGE("seev(ref, 'DATA\\[1]\\[1]', %f);", saveref.rot.y * (180.0 / 3.141592653589793238463));
+						_MESSAGE("seev(ref, 'DATA\\[1]\\[2]', %f);", saveref.rot.z * (180.0 / 3.141592653589793238463));
+					}
+				}
+			}
+		}
+		_MESSAGE("end;function Finalize: integer;begin Result := 0;  FinalizeUtils();end;end.");
+		gLog.OpenRelative(CSIDL_MYDOCUMENTS, "\\My Games\\Skyrim Special Edition\\SKSE\\Undaunted.log");
+	}
+
+	//Raw Rifts
+
+	RiftList riftList = RiftList();
+	void AddRift(FormRefList reflist)
+	{
+		RiftRef newref = RiftRef();
+		newref.reflist = reflist;
+		riftList.AddItem(newref);
+	}
+
+	FormRefList GetRandomRift()
+	{
+		return riftList.data[rand() % riftList.length].reflist;
+	}
+
+	// Baked Rifts
+	RefList RiftStartMarkers = RefList();
+	void ShuffleBakedRifts()
+	{
+		srand(time(NULL));
+		for (int i = 0; i < RiftStartMarkers.length + 10; i++)
+		{
+			RiftStartMarkers.SwapItem(rand() % RiftStartMarkers.length, rand() % RiftStartMarkers.length);
+		}
+	}
+
+	void InitBakedRiftStartMarkers()
+	{
+		_MESSAGE("Finding all Rift Start Markers");
+		RiftStartMarkers = RefList();
+		DataHandler* dataHandler = GetDataHandler();
+		const ModInfo* modInfo = dataHandler->LookupModByName("Undaunted.esp");
+		if (modInfo == NULL)
+		{
+			_MESSAGE("Can't find Undaunted.esp. What the hell?");
+			return;
+		}
+		UInt32 FormId = (modInfo->modIndex << 24) + 915120; //040DF6B0 - 01_Undaunted_RiftEnteranceMarker
+		_MESSAGE("FormId: %08X", FormId);
+		UInt64 cellcount = GetDataHandler()->cellList.m_size;
+		_MESSAGE("cellcount: %08X", cellcount);
+		for (int i = 0; i < cellcount; i++)
+		{
+			TESObjectCELL* parentCell = GetDataHandler()->cellList.m_data[i];
+			int numberofRefs = papyrusCell::GetNumRefs(parentCell, 0);
+			for (int j = 0; j < numberofRefs; j++)
+			{
+				TESObjectREFR* ref = papyrusCell::GetNthRef(parentCell, j, 0);
+				if (ref != NULL)
+				{
+					if (ref->formID != NULL)
+					{
+						if (ref->baseForm->formID == FormId)
+						{
+							Ref formref = Ref();
+							formref.objectRef = ref;
+							RiftStartMarkers.AddItem(formref);
+						}
+					}
+				}
+			}
+		}
+		ShuffleBakedRifts();
+	}
+
+
+
+	int currentRiftTarget = 0;
+	TESObjectREFR* GetRandomBakedRiftStartMarker()
+	{
+		srand(time(NULL));
+		currentRiftTarget++;
+		if (currentRiftTarget >= RiftStartMarkers.length)
+		{
+			//Reshuffle deck
+			_MESSAGE("Reshuffle deck");
+			ShuffleBakedRifts();
+			currentRiftTarget = 0;
+		}
+		_MESSAGE("currentRiftTarget: %i / %i", currentRiftTarget, RiftStartMarkers.length);
+
+		Ref target = RiftStartMarkers.data[currentRiftTarget];
+
+		return target.objectRef;
 	}
 
 	//Interiors

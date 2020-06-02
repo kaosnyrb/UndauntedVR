@@ -10,6 +10,8 @@ RelocPtr <DataHandler*> dataHandler(0x01F82AD8);
 
 RelocAddr<_MoveRefrToPosition> MoveReffunc(0x009E90E0);
 
+RelocAddr <_LookupFormByID> FormByID(0x001A3F60);
+
 DataHandler* Undaunted::GetDataHandler() {
 	return *dataHandler;
 }
@@ -20,7 +22,7 @@ BSFixedString Undaunted::GetCurrentWorldspaceName()
 	//Answer is this call doesn't work on the VR version, so this is centralising the differences.
 	_MESSAGE("GetCurrentWorldspaceName");
 	return "Tamriel";
-//	return GetPlayer()->currentWorldSpace->editorId.Get();
+	//	return GetPlayer()->currentWorldSpace->editorId.Get();
 }
 
 PlayerCharacter* Undaunted::GetPlayer()
@@ -38,6 +40,12 @@ void Undaunted::MoveRef(TESObjectREFR* object, TESObjectCELL* cell, TESWorldSpac
 	UInt32 nullHandle = *g_invalidRefHandle;
 	MoveReffunc(object, &nullHandle, cell, worldspace, &pos, &rot);
 }
+
+TESForm* Undaunted::LookupFormByID(UInt32 id)
+{
+	return FormByID(id);
+}
+
 
 static VersionDb db;
 

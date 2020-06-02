@@ -7,30 +7,20 @@ Scriptname Undaunted_TestQuest01 Extends Quest Hidden
 ReferenceAlias Property Alias_BountyMarker Auto
 ;END ALIAS PROPERTY
 
-;BEGIN ALIAS PROPERTY RewardLocation
-;ALIAS PROPERTY TYPE ReferenceAlias
-ReferenceAlias Property Alias_RewardLocation Auto
-;END ALIAS PROPERTY
-
 ;BEGIN ALIAS PROPERTY Player
 ;ALIAS PROPERTY TYPE ReferenceAlias
 ReferenceAlias Property Alias_Player Auto
 ;END ALIAS PROPERTY
 
-;BEGIN FRAGMENT Fragment_4
-Function Fragment_4()
-;BEGIN CODE
-SetObjectiveCompleted(0, false)
-SetObjectiveCompleted(10, false)
-SetObjectiveCompleted(20, false)
-SetObjectiveCompleted(30, false)
-SetObjectiveDisplayed(0, abDisplayed = true, abForce = true)
-SetObjectiveDisplayed(10, abDisplayed = false,  abForce = true)
-SetObjectiveDisplayed(20, abDisplayed = false, abForce = true)
-SetObjectiveDisplayed(30, abDisplayed = false, abForce = true)
-;END CODE
-EndFunction
-;END FRAGMENT
+;BEGIN ALIAS PROPERTY RewardLocation
+;ALIAS PROPERTY TYPE ReferenceAlias
+ReferenceAlias Property Alias_RewardLocation Auto
+;END ALIAS PROPERTY
+
+;BEGIN ALIAS PROPERTY PlayerAlias
+;ALIAS PROPERTY TYPE ReferenceAlias
+ReferenceAlias Property Alias_PlayerAlias Auto
+;END ALIAS PROPERTY
 
 ;BEGIN FRAGMENT Fragment_0
 Function Fragment_0()
@@ -54,6 +44,21 @@ SetObjectiveCompleted(10, true)
 SetObjectiveCompleted(20, false)
 SetObjectiveDisplayed(10, abDisplayed = false, abForce = true)
 SetObjectiveDisplayed(20, abDisplayed = true, abForce = true)
+;END CODE
+EndFunction
+;END FRAGMENT
+
+;BEGIN FRAGMENT Fragment_4
+Function Fragment_4()
+;BEGIN CODE
+SetObjectiveCompleted(0, false)
+SetObjectiveCompleted(10, false)
+SetObjectiveCompleted(20, false)
+SetObjectiveCompleted(30, false)
+SetObjectiveDisplayed(0, abDisplayed = true, abForce = true)
+SetObjectiveDisplayed(10, abDisplayed = false,  abForce = true)
+SetObjectiveDisplayed(20, abDisplayed = false, abForce = true)
+SetObjectiveDisplayed(30, abDisplayed = false, abForce = true)
 ;END CODE
 EndFunction
 ;END FRAGMENT
@@ -112,7 +117,11 @@ int Function StartEvent(bool nearby)
 	SetXMarker(bountyId,XMarkerRef)
 	Alias_BountyMarker.ForceRefTo(XMarkerRef)
 	SetBountyMessageRef(bountyId,QuestTextMessage)
-	StartBounty(bountyId,true)
+	if ( numberOfBountiesCurrently + 1 == numberOfBountiesNeeded)
+		StartEliteBounty(bountyId,true)
+	else
+		StartBounty(bountyId,true)
+	endif
 	SetCurrentStageID(10)
 	QuestStage.SetValue(10)
 	RegisterForSingleUpdate(GetConfigValueInt("BountyUpdateRate"))
@@ -164,6 +173,16 @@ Event OnUpdate()
 			SetGroupMemberComplete(enemies[enemieslength])
 		endif
 	endwhile
+
+	;Delete check
+	ObjectReference[] Deletes = GetBountyObjectRefs(bountyId,"DELETE")		
+	int Deleteslength = Deletes.Length
+	while(Deleteslength > 0)
+		Deleteslength -= 1
+		Deletes[Deleteslength].DisableNoWait(false)
+		Deletes[Deleteslength].Delete()
+	endwhile
+
 	bool complete = isBountyComplete(bountyId)
 	;Debug.Notification("Bounty State: " + complete)
 	if (QuestStage.GetValue() == 10)

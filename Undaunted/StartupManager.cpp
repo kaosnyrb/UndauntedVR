@@ -2,6 +2,10 @@
 #include "StartupManager.h"
 #include "RSJparser.tcc"
 #include <filesystem>
+#include <algorithm>
+#include <string>
+#include <Undaunted\FormRefList.h>
+#include <Undaunted\LocationUtils.h>
 
 namespace Undaunted {
 	RSJresource currentfile;
@@ -65,6 +69,54 @@ namespace Undaunted {
 		}
 	}
 
+	void LoadRifts()
+	{
+		DataHandler* dataHandler = GetDataHandler();
+		_MESSAGE("Loading Rifts...");
+		std::string path = "Data/Undaunted/Rifts";
+		for (const auto& entry : std::filesystem::directory_iterator(path))
+		{
+			auto filename = entry.path().u8string();
+			_MESSAGE("file: %s", filename.c_str());
+			if (entry.is_regular_file())
+			{
+				LoadJson(filename.c_str());
+				RSJresource settings = currentfile;
+				auto data = settings.as_array();
+				_MESSAGE("size: %i", data.size());
+				FormRefList reflist = FormRefList();
+				for (int i = 0; i < data.size(); i++)
+				{
+					std::string formid = data[i][0].as<std::string>("formid");
+
+					//_MESSAGE("formid: %s", formid);
+					double xpos = data[i][1].as<double>();
+					double ypos = data[i][2].as<double>();
+					double zpos = data[i][3].as<double>();
+					double xrot = data[i][4].as<double>();
+					double yrot = data[i][5].as<double>();
+					double zrot = data[i][6].as<double>();
+					int scale = data[i][7].as<int>();
+
+					FormRef formref = FormRef();
+					if (formid.compare("RiftExit") == 0) {
+						const ModInfo* modInfo = dataHandler->LookupModByName("Undaunted.esp");
+						formref.formId = (modInfo->modIndex << 24) + 745728;//RiftDoor
+					}
+					else
+					{
+						formref.formId = std::stoul(formid.c_str(), nullptr, 16);
+					}
+					formref.pos = NiPoint3(xpos, ypos, zpos);
+					formref.rot = NiPoint3(xrot, yrot, zrot);
+					formref.scale = scale;
+					reflist.AddItem(formref);
+				}
+				AddRift(reflist);
+			}
+		}
+	}
+
 	void LoadGroups()
 	{
 		DataHandler* dataHandler = GetDataHandler();
@@ -87,10 +139,26 @@ namespace Undaunted {
 					std::string modreq = group[0][1].as<std::string>("modreq");
 					int minlevel = group[0][2].as<int>(0);
 					int maxlevel = group[0][3].as<int>(0);
+					std::string tags = group[0][4].as<std::string>("notags");
+					
+					std::string delimiter = ",";
+					size_t pos = 0;
+					std::string token;
+					UnStringlist taglist = UnStringlist();
+					while ((pos = tags.find(delimiter)) != std::string::npos) {
+						token = tags.substr(0, pos);
+						std::transform(token.begin(), token.end(), token.begin(), ::toupper);
+						_MESSAGE("tags: %s", token.c_str());
+						taglist.AddItem(token);
+						tags.erase(0, pos + delimiter.length());
+					}
+					std::transform(tags.begin(), tags.end(), tags.begin(), ::toupper);
+					taglist.AddItem(tags);
 					const ModInfo* modInfo = dataHandler->LookupModByName(modreq.c_str());
-					if (modInfo != NULL)
+					if (modInfo != NULL )
 					{
-						int groupid = AddGroup(groupname, minlevel, maxlevel);
+						_MESSAGE("tags: %s", tags.c_str());
+						int groupid = AddGroup(groupname, minlevel, maxlevel, taglist);
 						for (int j = 1; j < group.size(); j++)
 						{
 							std::string esp = group[j][1].as<std::string>("esp");
@@ -106,8 +174,9 @@ namespace Undaunted {
 							{
 								model = group[j][4].as<std::string>("");
 							}
+							std::transform(type.begin(), type.end(), type.begin(), ::toupper);
 							GroupMember newmember = GroupMember();
-							newmember.BountyType = type.c_str();
+							newmember.BountyType = type;
 							newmember.FormId = form;
 							newmember.ModelFilepath = model.c_str();
 							AddMembertoGroup(groupid, newmember);

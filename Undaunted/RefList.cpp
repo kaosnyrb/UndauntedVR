@@ -1,13 +1,12 @@
-#include "ListLibary.h"
-
+#include "RefList.h"
 namespace Undaunted
 {
-	ListLibary* ListLibary::AddItem(GroupList item)
+	RefList* RefList::AddItem(Ref item)
 	{
-		ListLibary* currentlist = this;
-		ListLibary newlist = ListLibary();
+		RefList* currentlist = this;
+		RefList newlist = RefList();
 		newlist.length = currentlist->length + 1;
-		newlist.data = new GroupList[newlist.length];
+		newlist.data = new Ref[newlist.length];
 		for (int i = 0; i < currentlist->length; i++)
 		{
 			newlist.data[i] = currentlist->data[i];
@@ -17,10 +16,11 @@ namespace Undaunted
 		currentlist->length = newlist.length;
 		return currentlist;
 	}
-	ListLibary* ListLibary::SwapItem(int first, int second)
+
+	RefList* RefList::SwapItem(int first, int second)
 	{
-		GroupList First = this->data[first];
-		GroupList Second = this->data[second];
+		Ref First = this->data[first];
+		Ref Second = this->data[second];
 
 		this->data[first] = Second;
 		this->data[second] = First;

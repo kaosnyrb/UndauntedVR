@@ -1,7 +1,17 @@
 #include "MyPlugin.h"
 #include <Undaunted\StartupManager.h>
+#include <algorithm>
+#include <string>
+#include "UnStringList.h"
+#include <Undaunted\NavmeshTool.h>
 
 namespace Undaunted {
+
+	void hook_CaptureArea(StaticFunctionTag* base) {
+		//Create a SSE Edit script to recreate the current cell.
+		CaptureArea();
+	}
+
 
 	UInt32 hook_CreateBounty(StaticFunctionTag* base) {
 		int result = BountyManager::getInstance()->activebounties.length;
@@ -15,9 +25,16 @@ namespace Undaunted {
 	float hook_StartBounty(StaticFunctionTag* base, UInt32 BountyId, bool nearby) {
 		_MESSAGE("hook_StartBounty BountyId: %08X", BountyId);
 		BountyManager::getInstance()->StartBounty(BountyId,nearby, "",NULL,"");
+		ExportNavmesh();
 		return 2;
 	}
 
+	// Triggers a new Elite bounty stage to start.
+	float hook_StartEliteBounty(StaticFunctionTag* base, UInt32 BountyId, bool nearby) {
+		_MESSAGE("hook_StartEliteBounty BountyId: %08X", BountyId);
+		BountyManager::getInstance()->StartBounty(BountyId, nearby, "", NULL, "", "ELITE");
+		return 2;
+	}
 
 	// Triggers a new bounty stage to start with a certain name.
 	float hook_StartNamedBounty(StaticFunctionTag* base, UInt32 BountyId, bool nearby, BSFixedString bountyName) {
@@ -50,12 +67,16 @@ namespace Undaunted {
 		_MESSAGE("Mod Count: %08X", dataHandler->modList.loadedModCount);
 		for (int i = 0; i < dataHandler->modList.loadedModCount; i++)
 		{
-			ModInfo* mod = dataHandler->modList.loadedMods[i];
+			ModInfo* mod;
+			mod = dataHandler->modList.loadedMods[i];
 			_MESSAGE("Listing Mods: %s ", mod->name);
 		}
 		LoadSettings();
 		LoadGroups();
+		ShuffleGroupLibary();
+		LoadRifts();
 		BuildWorldList();
+		InitBakedRiftStartMarkers();
 		SetPlayerLevel(playerLevel);
 		BountyManager::getInstance()->isReady = 2;
 		_MESSAGE("ReadyState: %i ", BountyManager::getInstance()->isReady);
@@ -148,7 +169,7 @@ namespace Undaunted {
 			_MESSAGE("%s: Mod %s is not loaded", questText.Get(), modRequirement.Get());
 			return -1;
 		}
-		return AddGroup(questText.Get(),minLevel,maxLevel);
+		return AddGroup(questText.Get(),minLevel,maxLevel, UnStringlist());
 	}
 
 	// Add a member to a group.
@@ -166,7 +187,7 @@ namespace Undaunted {
 		const ModInfo* modInfo = dataHandler->LookupModByName(ModName.c_str());
 		if (modInfo != NULL)
 		{
-			return (modInfo->modIndex << 24) + FormId;
+			FormId = (modInfo->modIndex << 24) + FormId;
 		}
 		_MESSAGE("Mod Not Found: %s", ModName.Get());
 		return UInt32();
@@ -250,8 +271,8 @@ namespace Undaunted {
 		{
 			for (int j = 0; j < BountyManager::getInstance()->activebounties.data[i].bountygrouplist.length; j++)
 			{
-				const char* type = BountyManager::getInstance()->activebounties.data[i].bountygrouplist.data[j].BountyType.Get();
-				if (strcmp(type, "ScriptedDoor") == 0)
+				const char* type = BountyManager::getInstance()->activebounties.data[i].bountygrouplist.data[j].BountyType.c_str();
+				if (strcmp(type, "SCRIPTEDDOOR") == 0)
 				{
 					BountyManager::getInstance()->activebounties.data[i].bountygrouplist.data[j].isComplete = true;
 				}
@@ -263,24 +284,40 @@ namespace Undaunted {
 	VMResultArray<TESObjectREFR*> hook_GetBountyObjectRefs(StaticFunctionTag* base, UInt32 BountyId,BSFixedString bountyType)
 	{
 		_MESSAGE("hook_GetBountyObjectRefs %08X ", BountyId);
+		std::string type = bountyType.c_str();
+		std::transform(type.begin(), type.end(), type.begin(), ::toupper);
+
+		VMResultArray<TESObjectREFR*> resultsarray = VMResultArray<TESObjectREFR*>();
+
 		if (BountyManager::getInstance()->activebounties.length < BountyId)
 		{
-			return VMResultArray<TESObjectREFR*>();
+			return resultsarray;
 		}
-		VMResultArray<TESObjectREFR*> allies = VMResultArray<TESObjectREFR*>();
+
+		if (strcmp("DELETE", type.c_str()) == 0)
+		{
+			_MESSAGE("hook_GetBountyObjectRefs DELETE");
+			for (int i = 0; i < BountyManager::getInstance()->deleteList.length; i++)
+			{
+				resultsarray.push_back(BountyManager::getInstance()->deleteList.data[i].objectRef);
+			}
+			BountyManager::getInstance()->ClearDeleteList();
+			return resultsarray;
+		}
+
 		for (int i = 0; i < BountyManager::getInstance()->activebounties.data[BountyId].bountygrouplist.length; i++)
 		{
-			if (strcmp(BountyManager::getInstance()->activebounties.data[BountyId].bountygrouplist.data[i].BountyType.Get(), bountyType.Get()) == 0 ||
+			if (strcmp(BountyManager::getInstance()->activebounties.data[BountyId].bountygrouplist.data[i].BountyType.c_str(), type.c_str()) == 0 ||
 				strcmp(bountyType.Get(),"ALL") == 0)
 			{
 				if (BountyManager::getInstance()->activebounties.data[BountyId].bountygrouplist.data[i].objectRef != NULL)
 				{
-					allies.push_back(BountyManager::getInstance()->activebounties.data[BountyId].bountygrouplist.data[i].objectRef);
+					resultsarray.push_back(BountyManager::getInstance()->activebounties.data[BountyId].bountygrouplist.data[i].objectRef);
 				}
 			}
 		}
 		_MESSAGE("hook_GetBountyObjectRefs %08X Success", BountyId);
-		return allies;
+		return resultsarray;
 	}
 
 
@@ -293,7 +330,96 @@ namespace Undaunted {
 		result = list.questText.c_str();
 		return result;
 	}
+
+	void hook_CaptureCellData(StaticFunctionTag* base)
+	{
+		_MESSAGE("hook_CaptureCellData");
+		CaptureArea();		
+	}
+
+	VMResultArray<TESObjectREFR*> hook_SpawnRift(StaticFunctionTag* base, UInt32 BountyId, TESObjectREFR* Startpoint)
+	{
+		_MESSAGE("hook_SpawnRift");
+		RefList results = BountyManager::getInstance()->StartRift(BountyId, Startpoint);
+		VMResultArray<TESObjectREFR*> resultsarray = VMResultArray<TESObjectREFR*>();
+		for (int i = 0; i < results.length; i++)
+		{
+			resultsarray.push_back(results.data[i].objectRef);
+		}
+		return resultsarray;
+	}
+
+	VMResultArray<float> hook_GetRiftRotations(StaticFunctionTag* base)
+	{
+		_MESSAGE("hook_GetRiftRotations");
+		VMResultArray<float> resultsarray = VMResultArray<float>();
+		return GetRiftRotations();
+	}
+
 	
+	VMResultArray<TESObjectREFR*> hook_GetRiftReferences(StaticFunctionTag* base)
+	{
+		_MESSAGE("hook_GetRiftReferences");
+		RefList results = GetCurrentRiftRefs();
+		VMResultArray<TESObjectREFR*> resultsarray = VMResultArray<TESObjectREFR*>();
+		for (int i = 0; i < results.length; i++)
+		{
+			resultsarray.push_back(results.data[i].objectRef);
+		}
+		return resultsarray;
+	}
+
+	TESObjectREFR* hook_GetRandomRiftStartMarker(StaticFunctionTag* base)
+	{
+		_MESSAGE("hook_GetRandomRiftStartMarker");		
+		return GetRandomBakedRiftStartMarker();
+	}
+
+	TESObjectREFR* hook_SpawnMonsterInCell(StaticFunctionTag* base, UInt32 formid)
+	{
+		_MESSAGE("hook_GetRandomRiftStartMarker");
+		//1085677
+
+		_MESSAGE("Finding all Rift Battle Markers");
+		RefList RiftBattleMarkers = RefList();
+		DataHandler* dataHandler = GetDataHandler();
+		const ModInfo* modInfo = dataHandler->LookupModByName("Undaunted.esp");
+		if (modInfo == NULL)
+		{
+			_MESSAGE("Can't find Undaunted.esp. What the hell?");
+			return NULL;
+		}
+		UInt32 FormId = (modInfo->modIndex << 24) + 1085677; //041090ED - 01_Undaunted_RiftBattleMarker
+		WorldCell wcell = WorldCell();
+		wcell.cell = GetPlayer()->parentCell;
+		wcell.world = GetPlayer()->currentWorldSpace;
+		int numberofRefs = papyrusCell::GetNumRefs(wcell.cell, 0);
+		for (int i = 0; i < numberofRefs; i++)
+		{
+			TESObjectREFR* ref = papyrusCell::GetNthRef(wcell.cell, i, 0);
+			if (ref != NULL)
+			{
+				if (ref->formID != NULL)
+				{
+					if (ref->baseForm->formID == FormId)
+					{
+						Ref formref = Ref();
+						formref.objectRef = ref;
+						RiftBattleMarkers.AddItem(formref);
+					}
+				}
+			}
+		}
+		_MESSAGE("Spawning groups at each Rift Battle Marker");
+		int spawnradius = GetConfigValueInt("BountyEnemyInteriorSpawnRadius");
+		for (int i = 0; i < RiftBattleMarkers.length; i++)
+		{
+			GroupList riftlist = GetRandomTaggedGroup("RIFT");
+			SpawnGroupAtTarget(BountyManager::getInstance()->_registry, riftlist, RiftBattleMarkers.data[i].objectRef, wcell.cell, wcell.world, spawnradius,1000);
+		}
+
+		return NULL;
+	}
 
 	bool RegisterFuncs(VMClassRegistry* registry) {
 
@@ -304,6 +430,9 @@ namespace Undaunted {
 
 		registry->RegisterFunction(
 			new NativeFunction2 <StaticFunctionTag, float, UInt32,bool>("StartBounty", "Undaunted_SystemScript", Undaunted::hook_StartBounty, registry));
+
+		registry->RegisterFunction(
+			new NativeFunction2 <StaticFunctionTag, float, UInt32, bool>("StartEliteBounty", "Undaunted_SystemScript", Undaunted::hook_StartEliteBounty, registry));		
 
 		registry->RegisterFunction(
 			new NativeFunction3 <StaticFunctionTag, float, UInt32, bool, BSFixedString>("StartNamedBounty", "Undaunted_SystemScript", Undaunted::hook_StartNamedBounty, registry));
@@ -387,6 +516,30 @@ namespace Undaunted {
 		//Rewards
 		registry->RegisterFunction(
 			new NativeFunction2 <StaticFunctionTag, TESForm*, UInt32, UInt32>("SpawnRandomReward", "Undaunted_SystemScript", Undaunted::hook_SpawnRandomReward, registry));
+
+
+		//Rifts
+		registry->RegisterFunction(
+			new NativeFunction0 <StaticFunctionTag, void>("CaptureCellData", "Undaunted_SystemScript", Undaunted::hook_CaptureCellData, registry));
+
+		registry->RegisterFunction(
+			new NativeFunction2 <StaticFunctionTag, VMResultArray<TESObjectREFR*>, UInt32, TESObjectREFR*>("SpawnRift", "Undaunted_SystemScript", Undaunted::hook_SpawnRift, registry));
+
+		registry->RegisterFunction(
+			new NativeFunction0 <StaticFunctionTag, TESObjectREFR*>("GetRandomRiftStartMarker", "Undaunted_SystemScript", Undaunted::hook_GetRandomRiftStartMarker, registry));
+
+
+		registry->RegisterFunction(
+			new NativeFunction0 <StaticFunctionTag, VMResultArray<float>>("GetRiftRotations", "Undaunted_SystemScript", Undaunted::hook_GetRiftRotations, registry));
+
+		registry->RegisterFunction(
+			new NativeFunction0 <StaticFunctionTag, VMResultArray<TESObjectREFR*>>("GetRiftReferences", "Undaunted_SystemScript", Undaunted::hook_GetRiftReferences, registry));
+
+		registry->RegisterFunction(
+			new NativeFunction1 <StaticFunctionTag, TESObjectREFR*, UInt32>("SpawnMonsterInCell", "Undaunted_SystemScript", Undaunted::hook_SpawnMonsterInCell, registry));
+
+		registry->RegisterFunction(
+			new NativeFunction0 <StaticFunctionTag, void>("CaptureArea", "Undaunted_SystemScript", Undaunted::hook_CaptureArea, registry));
 
 
 		return true;

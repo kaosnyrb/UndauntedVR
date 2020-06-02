@@ -1,4 +1,5 @@
 #include "SKSELink.h"
+#include "UnStringList.h"
 
 namespace Undaunted
 {
@@ -7,7 +8,7 @@ namespace Undaunted
 	class GroupMember {
 	public:
 		UInt32 FormId;
-		BSFixedString BountyType;
+		std::string BountyType;
 		TESObjectREFR* objectRef;
 
 		BSFixedString ModelFilepath;
@@ -25,7 +26,9 @@ namespace Undaunted
 		UInt32 minLevel;
 		UInt32 maxLevel;
 		int length;
+		UnStringlist Tags;
 		GroupList* AddItem(GroupMember item);
+		GroupList* SwapItem(int first, int second);
 		void SetGroupMemberComplete(UInt32 id);
 	};
 
