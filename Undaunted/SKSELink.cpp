@@ -1,4 +1,5 @@
 #include "SKSELink.h"
+#include <Undaunted\LocationUtils.h>
 
 //Big shout out to https://github.com/mwilsnd for his project https://github.com/mwilsnd/SkyrimSE-SmoothCam which helped amazingly with the address lib stuff!
 
@@ -23,6 +24,10 @@ BSFixedString Undaunted::GetCurrentWorldspaceName()
 	_MESSAGE("GetCurrentWorldspaceName");
 	return "Tamriel";
 	//	return GetPlayer()->currentWorldSpace->editorId.Get();
+}
+
+Undaunted::WorldCell Undaunted::GetPlayerWorldCell() {
+	return Undaunted::GetWorldCellFromRef(Undaunted::GetPlayer());
 }
 
 PlayerCharacter* Undaunted::GetPlayer()

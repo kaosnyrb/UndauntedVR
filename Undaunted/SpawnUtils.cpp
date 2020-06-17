@@ -76,7 +76,7 @@ namespace Undaunted
 					//Random Offset
 					NiPoint3 offset = NiPoint3(rand() & spawnradius, rand() & spawnradius, 0);
 
-					MoveRefToWorldCell(Target, cell, worldspace, startingpoint + offset, NiPoint3(0, 0, rand() % 360));
+					//MoveRefToWorldCell(Target, cell, worldspace, startingpoint + offset, NiPoint3(0, 0, rand() % 360));
 					spawned = PlaceAtMe(registry, 1, Target, spawnForm, 1, true, false);
 					
 						int heightdist = startingpoint.z - spawned->pos.z;
@@ -84,7 +84,7 @@ namespace Undaunted
 						if ((heightdist > HeightDistance || heightdist < -HeightDistance) && giveupcount > 0)
 						{
 							_MESSAGE("Spawn Height is too different. Deleting.");
-							MoveRefToWorldCell(spawned, cell, worldspace, NiPoint3(0, 0, 10000), NiPoint3(0, 0, 0));
+							//MoveRefToWorldCell(spawned, cell, worldspace, NiPoint3(0, 0, 10000), NiPoint3(0, 0, 0));
 							BountyManager::getInstance()->AddToDeleteList(spawned);
 							giveupcount--;
 						}

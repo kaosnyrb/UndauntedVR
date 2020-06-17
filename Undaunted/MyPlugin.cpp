@@ -25,7 +25,7 @@ namespace Undaunted {
 	float hook_StartBounty(StaticFunctionTag* base, UInt32 BountyId, bool nearby) {
 		_MESSAGE("hook_StartBounty BountyId: %08X", BountyId);
 		BountyManager::getInstance()->StartBounty(BountyId,nearby, "",NULL,"");
-		ExportNavmesh();
+		//ExportNavmesh();
 		return 2;
 	}
 
@@ -368,11 +368,13 @@ namespace Undaunted {
 		}
 		return resultsarray;
 	}
+	TESObjectREFR* LastRift;
 
 	TESObjectREFR* hook_GetRandomRiftStartMarker(StaticFunctionTag* base)
 	{
 		_MESSAGE("hook_GetRandomRiftStartMarker");		
-		return GetRandomBakedRiftStartMarker();
+		LastRift = GetRandomBakedRiftStartMarker();
+		return LastRift;
 	}
 
 	TESObjectREFR* hook_SpawnMonsterInCell(StaticFunctionTag* base, UInt32 formid)
@@ -390,9 +392,9 @@ namespace Undaunted {
 			return NULL;
 		}
 		UInt32 FormId = (modInfo->modIndex << 24) + 1085677; //041090ED - 01_Undaunted_RiftBattleMarker
-		WorldCell wcell = WorldCell();
+		WorldCell wcell = GetPlayerWorldCell();// GetWorldCellFromRef(LastRift);
+		//wcell.world = GetPlayer()->currentWorldSpace;
 		wcell.cell = GetPlayer()->parentCell;
-		wcell.world = GetPlayer()->currentWorldSpace;
 		int numberofRefs = papyrusCell::GetNumRefs(wcell.cell, 0);
 		for (int i = 0; i < numberofRefs; i++)
 		{
@@ -414,6 +416,7 @@ namespace Undaunted {
 		int spawnradius = GetConfigValueInt("BountyEnemyInteriorSpawnRadius");
 		for (int i = 0; i < RiftBattleMarkers.length; i++)
 		{
+			_MESSAGE("RiftBattleMarkers: %i", i);
 			GroupList riftlist = GetRandomTaggedGroup("RIFT");
 			SpawnGroupAtTarget(BountyManager::getInstance()->_registry, riftlist, RiftBattleMarkers.data[i].objectRef, wcell.cell, wcell.world, spawnradius,1000);
 		}

@@ -294,7 +294,7 @@ namespace Undaunted {
 	RefList BountyManager::StartRift(int BountyID, TESObjectREFR* Startpoint)
 	{
 		//Bounty bounty = activebounties.data[BountyID];
-		RefList refs = SpawnRift(_registry, Startpoint, Startpoint->parentCell, GetPlayer()->currentWorldSpace);
+		RefList refs = SpawnRift(_registry, Startpoint, Startpoint->parentCell, GetPlayerWorldCell().world);
 		return refs;
 	}
 

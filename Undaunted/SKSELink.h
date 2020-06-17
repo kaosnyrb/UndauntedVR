@@ -24,6 +24,7 @@
 #include "addrlib/relocation.h"
 #include "addrlib/offsets.h"
 #include "addrlib/versiondb.h"
+#include "WorldCellList.h"
 
 //#include "RE/Skyrim.h"
 namespace Undaunted
@@ -33,6 +34,7 @@ namespace Undaunted
 	DataHandler* GetDataHandler();
 
 	BSFixedString GetCurrentWorldspaceName();
+	Undaunted::WorldCell GetPlayerWorldCell();
 
 	void MoveRef(TESObjectREFR* object, TESObjectCELL* cell, TESWorldSpace* worldspace, NiPoint3 pos, NiPoint3 rot);
 
